@@ -54,8 +54,8 @@ services:
   frontend:
     build: ./frontend
     environment:
-      VITE_DRINKS_API_URL: https://localhost/api/drinks
-      VITE_FOOD_API_URL: https://localhost/api/food
+      VITE_DRINKS_API_URL: /api/drinks
+      VITE_FOOD_API_URL: /api/food
     depends_on:
       - drinks-api
       - food-api
