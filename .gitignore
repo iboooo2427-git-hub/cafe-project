@@ -3,3 +3,7 @@ frontend/dist/
 __pycache__/
 *.pyc
 .env
+nginx/certs/
+certbot/
+*.pem
+*.key

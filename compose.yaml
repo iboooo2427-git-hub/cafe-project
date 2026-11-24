@@ -1,4 +1,25 @@
 services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - frontend
+      - drinks-api
+      - food-api
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -16,8 +37,6 @@ services:
 
   drinks-api:
     build: ./drinks-api
-    ports:
-      - "8001:8000"
     environment:
       DATABASE_URL: postgresql://cafe_user:secretpassword@db:5432/cafe_db
     depends_on:
@@ -26,8 +45,6 @@ services:
 
   food-api:
     build: ./food-api
-    ports:
-      - "8002:8000"
     environment:
       DATABASE_URL: postgresql://cafe_user:secretpassword@db:5432/cafe_db
     depends_on:
@@ -36,11 +53,9 @@ services:
 
   frontend:
     build: ./frontend
-    ports:
-      - "5173:5173"
     environment:
-      VITE_DRINKS_API_URL: http://localhost:8001
-      VITE_FOOD_API_URL: http://localhost:8002
+      VITE_DRINKS_API_URL: https://localhost/api/drinks
+      VITE_FOOD_API_URL: https://localhost/api/food
     depends_on:
       - drinks-api
       - food-api
