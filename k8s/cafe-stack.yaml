@@ -15,6 +15,8 @@ metadata:
   name: db
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: db
@@ -35,6 +37,8 @@ spec:
               value: secretpassword
             - name: POSTGRES_DB
               value: cafe_db
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
@@ -166,10 +170,9 @@ kind: Ingress
 metadata:
   name: cafe-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
-    - host: cafe.local
-      http:
+    - http:
         paths:
           - path: /api/drinks
             pathType: Prefix
