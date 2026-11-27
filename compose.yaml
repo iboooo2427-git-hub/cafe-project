@@ -1,0 +1,64 @@
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - frontend
+      - drinks-api
+      - food-api
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cafe_user
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: cafe_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cafe_user -d cafe_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  drinks-api:
+    build: ./drinks-api
+    environment:
+      DATABASE_URL: postgresql://cafe_user:secretpassword@db:5432/cafe_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  food-api:
+    build: ./food-api
+    environment:
+      DATABASE_URL: postgresql://cafe_user:secretpassword@db:5432/cafe_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_DRINKS_API_URL: /api/drinks
+      VITE_FOOD_API_URL: /api/food
+    depends_on:
+      - drinks-api
+      - food-api
+
+volumes:
+  pgdata:
